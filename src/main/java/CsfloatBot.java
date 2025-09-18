@@ -1,17 +1,14 @@
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
 
-
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonArray;
-
-import java.io.IOException;
-import java.io.FileWriter;
-
-import java.util.ArrayList;
 
 //TO-DO: discountItems.txt displays an arrayList of objects that contain (itemId,  discountPercentage)
 //       Implement a timer that calls program, jittering between 900ms and 1100ms
@@ -76,7 +73,7 @@ public class CsfloatBot{
 
     public static void CheckWriteToFile(JsonObject item, String name, String float_value, int p, double discount, String created, String asset_id){
         if(discount >= discount_value && !ContainsItem(item, asset_id)){
-            DiscountedItem d = new DiscountedItem(item, name, float_value, p, discount_value, created, asset_id);
+            DiscountedItem d = new DiscountedItem(item, name, float_value, p, discount, created, asset_id);
             if(items.size() < 10){
                 items.add(d);
             }
@@ -90,6 +87,7 @@ public class CsfloatBot{
             }
             try (FileWriter fw = new FileWriter("discountItems.txt", true)) 
             {
+                new FileWriter("discountItems.txt", false).close();
                 for(int i = 0; i < items.size(); i++){
                     fw.write("---------------------------\n" +
                              "Skin: " + items.get(i).getName() + "\n" +
@@ -103,6 +101,65 @@ public class CsfloatBot{
             catch (IOException e) {
             e.printStackTrace();
             }
+        }
+    }
+    public static void runOnce(){
+        try {
+            HttpClient client = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder().uri(URI.create(defaultURL)).header("Authorization", api_key).header("Accept", "application/json").header("User-Agent", "CsfloatBot/1.0").build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            String responseBody = response.body();
+
+            JsonObject root = JsonParser.parseString(responseBody).getAsJsonObject();
+            JsonArray data = root.getAsJsonArray("data");
+
+            int n = Math.min(data.size(), Integer.parseInt(limit));
+
+            
+            for (int i = 0; i < n; i++){
+                JsonObject listing = data.get(i).getAsJsonObject();
+                JsonObject listingItem = listing.getAsJsonObject("item");
+                String name = listingItem.get("market_hash_name").getAsString();
+                String floatValue = "";
+                if(listingItem.has("float_value") && !listingItem.get("float_value").isJsonNull()){
+                    floatValue = listingItem.get("float_value").getAsString();
+                }
+                else{
+                    floatValue = "N/A";
+                }
+
+                String asset_id = listingItem.get("asset_id").getAsString();
+
+                int p = listing.get("price").getAsInt();
+                int pp;
+                try {
+                    pp = listing.getAsJsonObject("reference").get("predicted_price").getAsInt();
+                } catch (Exception e) {
+                    continue;
+                }
+                String created = listing.get("created_at").getAsString();
+
+                double discount;
+
+                if (pp <= 0) {
+                    break;
+                } else {
+                    discount = (1.0 - (double) p / (double) pp) * 100.0; // e.g., 70 means 70% off
+                }
+
+                System.out.println((i + 1) + ")-----------------");
+                System.out.println("Skin: " + name);
+                System.out.println("Float: " + floatValue);
+                System.out.println("Price(cents): " + p);
+                System.out.println("Discount: " + discount + "%");
+                System.out.println("Since: " + created);
+                System.out.println("ID: " + asset_id);
+
+                CheckWriteToFile(listingItem, name, floatValue, p, discount, created, asset_id);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -169,62 +226,11 @@ public class CsfloatBot{
         }
         System.out.println("Requesting: " + defaultURL);
 
-        try {
-            HttpClient client = HttpClient.newHttpClient();
-            HttpRequest request = HttpRequest.newBuilder().uri(URI.create(defaultURL)).header("Authorization", api_key).header("Accept", "application/json").header("User-Agent", "CsfloatBot/1.0").build();
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-            String responseBody = response.body();
-
-            JsonObject root = JsonParser.parseString(responseBody).getAsJsonObject();
-            JsonArray data = root.getAsJsonArray("data");
-
-            int n = Math.min(data.size(), Integer.parseInt(limit));
-
-            
-            for (int i = 0; i < n; i++){
-                JsonObject listing = data.get(i).getAsJsonObject();
-                JsonObject listingItem = listing.getAsJsonObject("item");
-                String name = listingItem.get("market_hash_name").getAsString();
-                String floatValue = "";
-                if(listingItem.has("float_value") && !listingItem.get("float_value").isJsonNull()){
-                    floatValue = listingItem.get("float_value").getAsString();
-                }
-                else{
-                    floatValue = "N/A";
-                }
-
-                String asset_id = listingItem.get("asset_id").getAsString();
-
-                int p = listing.get("price").getAsInt();
-                int pp;
-                try {
-                    pp = listing.getAsJsonObject("reference").get("predicted_price").getAsInt();
-                } catch (Exception e) {
-                    continue;
-                }
-                String created = listing.get("created_at").getAsString();
-
-                double discount;
-
-                if (pp <= 0) {
-                    break;
-                } else {
-                    discount = (1.0 - (double) p / (double) pp) * 100.0; // e.g., 70 means 70% off
-                }
-
-                System.out.println((i + 1) + ")-----------------");
-                System.out.println("Skin: " + name);
-                System.out.println("Float: " + floatValue);
-                System.out.println("Price(cents): " + p);
-                System.out.println("Discount: " + discount + "%");
-                System.out.println("Since: " + created);
-                System.out.println("ID: " + asset_id);
-
-                CheckWriteToFile(listingItem, name, floatValue, p, discount, created, asset_id);
+        new java.util.Timer().scheduleAtFixedRate(new java.util.TimerTask() {
+            @Override
+            public void run() {
+                runOnce();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        }, 0, 5000);
     }
 }
