@@ -1,61 +1,7 @@
 ---------------------------
-Skin: StatTrak™ FAMAS | Mecha Industries (Factory New)
-Float: 0.06149107217788696
-Price(cents): 3000
-Discount: 3.0381383322559796
-Created: 2025-09-18T02:08:37.159309Z
-ID: 46212193243---------------------------
-Skin: MP9 | Hot Rod (Factory New)
-Float: 0.019952397793531418
-Price(cents): 41800
-Discount: 0.8044804100714287
-Created: 2025-09-18T02:09:46.270961Z
-ID: 39301793546---------------------------
-Skin: AK-47 | Point Disarray (Minimal Wear)
-Float: 0.1343601495027542
-Price(cents): 5470
-Discount: 5.330564209068878
-Created: 2025-09-18T02:10:01.595205Z
-ID: 45763778397---------------------------
-Skin: CS:GO Weapon Case
-Float: N/A
-Price(cents): 9600
-Discount: 1.0717230008243983
-Created: 2025-09-18T02:10:05.656725Z
-ID: 46430674926---------------------------
-Skin: AWP | Wildfire (Factory New)
-Float: 0.013691706582903862
-Price(cents): 35142
-Discount: 10.725536022761917
-Created: 2025-09-18T02:10:23.790711Z
-ID: 45932598077---------------------------
-Skin: USP-S | Printstream (Factory New)
-Float: 0.06993533670902252
-Price(cents): 12747
-Discount: 1.001863932898417
-Created: 2025-09-18T02:10:43.265279Z
-ID: 45917693899---------------------------
-Skin: AWP | Wildfire (Factory New)
-Float: 0.026408176869153976
-Price(cents): 32175
-Discount: 6.895653683662251
-Created: 2025-09-18T02:10:49.073488Z
-ID: 45966844921---------------------------
-Skin: AWP | Wildfire (Factory New)
-Float: 0.026408176869153976
-Price(cents): 32175
-Discount: 6.895653683662251
-Created: 2025-09-18T02:10:49.073488Z
-ID: 45966844921---------------------------
-Skin: ★ Bayonet | Night (Minimal Wear)
-Float: 0.08132783323526382
-Price(cents): 33193
-Discount: 3.999884312818136
-Created: 2025-09-18T02:10:57.963514Z
-ID: 42138337377---------------------------
-Skin: SSG 08 | Dragonfire (Factory New)
-Float: 0.04900128394365311
-Price(cents): 5625
-Discount: 2.2249261254997377
-Created: 2025-09-18T02:10:56.286944Z
-ID: 46189938627
+Skin: SG 553 | Phantom (Minimal Wear)
+Float: 0.13674801588058472
+Price(cents): 345
+Discount: 12.878787878787879
+Created: 2025-09-19T16:04:07.868134Z
+ID: 44759363092
