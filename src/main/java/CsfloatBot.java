@@ -5,13 +5,12 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
-import java.util.Timer;
-import java.util.TimerTask;
 
 //TO-DO: Continue to test rate limits and eventually implement exponential back-off, maybe a condensed caller
 //       
@@ -32,10 +31,11 @@ public class CsfloatBot{
     private static String sort_by = "";//most_recent, highest_discount(basically to see what not to buy), lowest_float
     private static String limit = "50";
     private static double discount_value = 25.0;
-    private static String api_key = "xKowFyRcypK-3SzbkYLTwDz8SI0jRsR-";
+    private static String api_key = "";
     
-    private static int originalCooldown;
-    private static int cooldown;
+    private static int originalCooldown = 5000;
+    private static int cooldown = originalCooldown;
+    private static int pauseCounter = 0;
     private static Timer timer = new Timer();
 
     private static ArrayList<DiscountedItem> items;
@@ -114,14 +114,19 @@ public class CsfloatBot{
         try {
             HttpClient client = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder().uri(URI.create(defaultURL)).header("Authorization", api_key).header("Accept", "application/json").header("User-Agent", "CsfloatBot/1.0").build();
-            //would the check for an overuse error go right here before using client.send?
+
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
             if(response.statusCode() == 429){
                 cooldown *= 2;
             }
             else{
-                cooldown = originalCooldown;
+                if(cooldown > originalCooldown * 2){ 
+                    cooldown = (int) Math.round(cooldown * 0.75);
+                }
+                else{
+                    cooldown = originalCooldown;
+                }
             }
 
             String responseBody = response.body();
@@ -158,7 +163,7 @@ public class CsfloatBot{
                 double discount;
 
                 if (pp <= 0) {
-                    break;
+                    continue;
                 } else {
                     discount = (1.0 - (double) p / (double) pp) * 100.0; // e.g., 70 means 70% off
                 }
@@ -236,6 +241,7 @@ public class CsfloatBot{
                     case "cooldown":
                         originalCooldown = Integer.parseInt(value);
                         cooldown = originalCooldown;
+                        break;
                     default:
                         System.out.print("You didn't put any args");
                         break;
@@ -244,23 +250,28 @@ public class CsfloatBot{
         }
         System.out.println("Requesting: " + defaultURL);
 
-        new java.util.Timer().scheduleAtFixedRate(new java.util.TimerTask() {
-            @Override
-            public void run() {
-                runOnce();
-                //sleep the program here for cooldown
-            }
-        }, 0, 0);
+        RunWithBackoff(0);
     }
 
     public static void RunWithBackoff(int delay){
         timer.schedule(new TimerTask(){
+            @Override
             public void run(){
+                pauseCounter++;
                 runOnce();
 
-                int nextDelay = cooldown;
+                int nextDelay;
 
-                RunWithBackoff(nextDelay);
+                if(pauseCounter >= 20){
+                    nextDelay =  60000;
+                    pauseCounter = 0;
+                }
+                else{
+                    nextDelay = cooldown;
+                }
+
+                int r = (int)(Math.random() * 150);
+                RunWithBackoff(nextDelay + r);
             }
         }, delay);
     }
